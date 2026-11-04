@@ -1,5 +1,6 @@
 import type { GlobalContent } from "./schema/blocks"
 import type { PageData } from "./schema/registry"
+import type { LegalContent } from "./legal"
 
 // Talks to the panel's Content API. Server-side only: the read token must never
 // reach the browser. Caching is the site's job ("use cache" + cacheTag), see
@@ -30,6 +31,8 @@ export type ContentDocument = {
 export type SitePayload = {
   site: SiteInfo
   global: GlobalContent | null
+  /** Data for the privacy and business-details pages (site-kit/legal). */
+  legal: LegalContent | null
   documents: ContentDocument[]
   assets: Record<string, AssetRef>
 }
