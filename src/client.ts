@@ -7,7 +7,17 @@ import type { PageData } from "./schema/registry"
 
 export type AssetRef = { id: string; url: string; width: number | null; height: number | null; alt: Record<string, string> }
 
-export type SiteInfo = { slug: string; name: string; locales: string[]; defaultLocale: string; domain: string | null }
+export type SiteInfo = {
+  slug: string
+  name: string
+  locales: string[]
+  defaultLocale: string
+  domain: string | null
+  /** Author credit in the footer is a licence condition; false only with a written exception (contract art. 7.5). */
+  footerCredit: boolean
+  /** Paused for non-payment (VOP čl. 13): the site shows a maintenance page. */
+  paused: boolean
+}
 
 export type ContentDocument = {
   id: string
