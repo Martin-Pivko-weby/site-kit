@@ -27,7 +27,19 @@ export const time = (title: string) =>
 
 export const plain = (title: string, max = 200) => z.string().max(max).meta({ title, "x-widget": "text" })
 
+/**
+ * Where a button or link may point: a page of the same site (/kontakt), a place
+ * on the page (#cennik), a web address, an e-mail or a phone number. Anything
+ * else, above all `javascript:`, is refused, so content can never carry script
+ * into a client's page. `//host` and `/\host` are refused too: browsers read
+ * them as another site. Empty stays allowed (a button not linked yet).
+ */
+export const HREF = /^(|\/(?![/\\]).*|#.*|https?:\/\/.+|mailto:.+|tel:.+)$/i
+
 export const link = (title: string) =>
-  z.object({ label: text("Text tlačidla", 60), href: z.string().max(500).meta({ title: "Odkaz", "x-widget": "url" }) }).meta({ title })
+  z.object({
+    label: text("Text tlačidla", 60),
+    href: z.string().max(500).regex(HREF, "Odkaz musí začínať /, #, https://, mailto: alebo tel:").meta({ title: "Odkaz", "x-widget": "url" }),
+  }).meta({ title })
 
 export const list = <T extends z.ZodType>(item: T, title: string, max = 100) => z.array(item).max(max).meta({ title })
