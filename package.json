@@ -1,6 +1,6 @@
 {
   "name": "@vegetacny/site-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Shared invisible layer for Vegetačný Systém client sites: content schemas, content API client, revalidation, preview, SEO, i18n. No visual components.",
   "type": "module",
