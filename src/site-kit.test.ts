@@ -32,6 +32,21 @@ test("registry: valid page parses and gets defaults", () => {
   assert.deepEqual(r.data.seo, {})
 })
 
+test("registry: team and stories blocks parse, and a story needs what happened and today", () => {
+  const ok = defineRegistry().parsePage({
+    blocks: [
+      { id: "t", type: "team", data: { heading: { sk: "Náš tím" }, items: [{ name: "Jana", role: { sk: "sestra" }, image: IMG }] } },
+      { id: "s", type: "stories", data: { heading: { sk: "Príbehy" }, items: [{ name: "Bruno", before: { sk: "Zlomená labka" }, today: { sk: "Behá" } }] } },
+    ],
+  })
+  assert.ok(ok.ok)
+  const bad = defineRegistry().parsePage({
+    blocks: [{ id: "s", type: "stories", data: { heading: { sk: "Príbehy" }, items: [{ name: "Bruno", before: { sk: "Zlomená labka" } }] } }],
+  })
+  assert.ok(!bad.ok)
+  assert.match(bad.issues.join(" "), /today/)
+})
+
 test("registry: unknown blocks, bad data and duplicate ids are reported", () => {
   const r = defineRegistry().parsePage({
     blocks: [

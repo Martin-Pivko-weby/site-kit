@@ -165,6 +165,36 @@ export const globalBlocks = {
       bookingUrl: url("Odkaz na rezerváciu").optional(),
     }),
   },
+  team: {
+    version: 1,
+    title: "Tím",
+    schema: z.object({
+      heading: text("Nadpis"),
+      intro: textarea("Úvod").optional(),
+      items: list(z.object({
+        name: plain("Meno", 80),
+        role: text("Rola (napr. veterinárka)"),
+        line: textarea("Niečo osobné", 400).optional(),
+        image: image("Fotka").optional(),
+      }).meta({ title: "Človek" }), "Ľudia", 40),
+    }),
+  },
+  stories: {
+    version: 1,
+    title: "Príbehy",
+    // A case told in steps: what happened, what was done, how it is today.
+    schema: z.object({
+      heading: text("Nadpis"),
+      items: list(z.object({
+        name: plain("Meno (napr. Bruno)", 80),
+        about: text("Kto to je (napr. labrador, 9 rokov)").optional(),
+        before: textarea("Čo sa stalo"),
+        treatment: textarea("Čo sme spravili").optional(),
+        today: textarea("Ako je to dnes"),
+        image: image("Fotka").optional(),
+      }).meta({ title: "Príbeh" }), "Príbehy", 30),
+    }),
+  },
   rich_text: {
     version: 1,
     title: "Text",
