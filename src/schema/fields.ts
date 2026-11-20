@@ -43,3 +43,6 @@ export const link = (title: string) =>
   }).meta({ title })
 
 export const list = <T extends z.ZodType>(item: T, title: string, max = 100) => z.array(item).max(max).meta({ title })
+
+/** YouTube (watch, youtu.be, shorts) or Vimeo links only: the site embeds them after a click. */
+export const VIDEO_URL = /^https:\/\/(www\.)?(youtube\.com\/(watch\?v=|shorts\/)[\w-]{6,}|youtu\.be\/[\w-]{6,}|vimeo\.com\/\d{5,})([?&#].*)?$/

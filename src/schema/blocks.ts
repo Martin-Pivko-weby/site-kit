@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { image, link, list, localized, markdown, plain, text, textarea, time, url } from "./fields"
+import { VIDEO_URL, image, link, list, localized, markdown, plain, text, textarea, time, url } from "./fields"
 
 // Content types only. How a block looks is each site's own business (SPEC §3.3).
 // Bump `version` and add a migration when a change is not backwards compatible.
@@ -22,6 +22,8 @@ export const globalBlocks = {
       subheading: textarea("Podnadpis", 400).optional(),
       image: image("Obrázok").optional(),
       cta: link("Tlačidlo").optional(),
+      cta2: link("Druhé tlačidlo (napr. Zavolať)").optional(),
+      layout: z.enum(["split", "full"]).default("split").meta({ title: "Rozloženie" }),
     }),
   },
   about: {
@@ -42,6 +44,10 @@ export const globalBlocks = {
         name: text("Názov"),
         description: textarea("Popis").optional(),
         image: image("Obrázok").optional(),
+        icon: image("Ikona (namiesto fotky)").optional(),
+        price: plain("Cena", 40).optional(),
+        duration: text("Trvanie (napr. 45 min)", 40).optional(),
+        link: link("Odkaz na podstránku služby").optional(),
       }).meta({ title: "Služba" }), "Služby"),
     }),
   },
@@ -72,7 +78,13 @@ export const globalBlocks = {
     title: "Galéria",
     schema: z.object({
       heading: text("Nadpis").optional(),
-      images: list(image("Obrázok"), "Obrázky", 60),
+      // Older sites: plain images. New content uses items (caption, category).
+      images: list(image("Obrázok"), "Obrázky (bez popisu)", 60).default([]),
+      items: list(z.object({
+        image: image("Obrázok"),
+        caption: text("Popis", 140).optional(),
+        category: text("Kategória (napr. Izby)", 40).optional(),
+      }).meta({ title: "Fotka" }), "Fotky s popisom", 60).optional(),
     }),
   },
   testimonials: {
@@ -85,6 +97,13 @@ export const globalBlocks = {
         author: plain("Meno", 80),
         role: text("Kto to je (firma, mesto)").optional(),
       }).meta({ title: "Referencia" }), "Referencie", 30),
+      // Typed in by hand at launch and during maintenance: no Google script on the site.
+      google: z.object({
+        rating: z.number().min(1).max(5).meta({ title: "Hodnotenie (napr. 4.9)" }),
+        count: z.number().int().min(1).meta({ title: "Počet recenzií" }),
+        url: url("Odkaz na Google profil"),
+        asOf: z.iso.date().meta({ title: "Stav k dátumu" }),
+      }).meta({ title: "Hodnotenie na Google" }).optional(),
     }),
   },
   faq: {
@@ -115,6 +134,15 @@ export const globalBlocks = {
       body: textarea("Text").optional(),
       showMap: z.boolean().default(true).meta({ title: "Zobraziť mapu" }),
       showForm: z.boolean().default(true).meta({ title: "Zobraziť formulár" }),
+      // Two or more branches; with one, the global address and hours are used.
+      locations: list(z.object({
+        name: text("Názov prevádzky (napr. Trnava)", 60),
+        street: plain("Ulica a číslo", 120),
+        city: plain("Mesto", 80),
+        phone: plain("Telefón", 40).optional(),
+        hours: textarea("Otváracie hodiny", 300).optional(),
+        mapUrl: url("Odkaz na mapu").optional(),
+      }).meta({ title: "Prevádzka" }), "Prevádzky", 10).optional(),
     }),
   },
   news: {
@@ -195,6 +223,96 @@ export const globalBlocks = {
       }).meta({ title: "Príbeh" }), "Príbehy", 30),
     }),
   },
+  steps: {
+    version: 1,
+    title: "Ako to prebieha",
+    schema: z.object({
+      heading: text("Nadpis"),
+      intro: textarea("Úvod", 400).optional(),
+      items: list(z.object({
+        title: text("Krok", 80),
+        body: textarea("Popis", 300).optional(),
+      }).meta({ title: "Krok" }), "Kroky", 6),
+    }),
+  },
+  before_after: {
+    version: 1,
+    title: "Pred a po",
+    // Both photos from the same place and angle: the site shows them under one slider.
+    schema: z.object({
+      heading: text("Nadpis").optional(),
+      items: list(z.object({
+        before: image("Fotka pred"),
+        after: image("Fotka po"),
+        caption: text("Popis (napr. Obývačka, Senec, 3 dni)", 140).optional(),
+      }).meta({ title: "Dvojica" }), "Dvojice", 12),
+    }),
+  },
+  stats: {
+    version: 1,
+    title: "Čísla a dôvera",
+    // Only figures the client can back up.
+    schema: z.object({
+      heading: text("Nadpis").optional(),
+      items: list(z.object({
+        value: plain("Číslo (napr. 20, 4,8, 10 r.)", 20),
+        label: text("Popis (napr. rokov praxe)", 80),
+      }).meta({ title: "Číslo" }), "Čísla", 4),
+      badgesHeading: text("Nadpis log (napr. Certifikáty a partneri)").optional(),
+      badges: list(z.object({
+        name: text("Názov certifikátu alebo partnera", 80),
+        image: image("Logo").optional(),
+      }).meta({ title: "Certifikát alebo partner" }), "Certifikáty a partneri", 12).default([]),
+    }),
+  },
+  events: {
+    version: 1,
+    title: "Akcie",
+    // Past events move to an archive by themselves (pastEvents/upcomingEvents).
+    schema: z.object({
+      heading: text("Nadpis"),
+      items: list(z.object({
+        title: text("Názov", 120),
+        date: z.iso.date().meta({ title: "Dátum" }),
+        time: time("Čas").optional(),
+        place: text("Miesto", 120).optional(),
+        price: plain("Cena (napr. 25 €, zadarmo)", 40).optional(),
+        description: textarea("Popis", 800).optional(),
+        image: image("Fotka").optional(),
+        link: link("Odkaz na viac").optional(),
+      }).meta({ title: "Akcia" }), "Akcie", 100),
+      showArchive: z.boolean().default(true).meta({ title: "Zobraziť minulé akcie" }),
+    }),
+  },
+  video: {
+    version: 1,
+    title: "Video",
+    // Loaded only after a click (videoEmbed), so no third-party cookies before it.
+    schema: z.object({
+      heading: text("Nadpis").optional(),
+      body: textarea("Text", 600).optional(),
+      url: z.string().max(300).regex(VIDEO_URL, "Odkaz musí byť na YouTube alebo Vimeo").meta({ title: "Odkaz na video (YouTube alebo Vimeo)", "x-widget": "url" }),
+      poster: image("Náhľadový obrázok").optional(),
+    }),
+  },
+  jobs: {
+    version: 1,
+    title: "Hľadáme kolegu",
+    // No application form: a position says how to get in touch.
+    schema: z.object({
+      heading: text("Nadpis"),
+      intro: textarea("Úvod", 400).optional(),
+      items: list(z.object({
+        title: text("Pozícia", 80),
+        terms: text("Úväzok (napr. plný úväzok)", 60).optional(),
+        place: text("Miesto", 60).optional(),
+        pay: text("Mzda (napr. od 1 200 € brutto)", 60).optional(),
+        offer: list(text("Bod", 160), "Čo ponúkame", 10).default([]),
+        expect: list(text("Bod", 160), "Čo očakávame", 10).default([]),
+        contact: link("Ako sa ozvať (tel: alebo mailto:)"),
+      }).meta({ title: "Pozícia" }), "Pozície", 10),
+    }),
+  },
   rich_text: {
     version: 1,
     title: "Text",
@@ -224,6 +342,14 @@ export const globalSchema = z.object({
   }).meta({ title: "Sociálna sieť" }), "Sociálne siete", 10).default([]),
   mapUrl: url("Odkaz na mapu").optional(),
   footerNote: localized(z.string().max(300), "Poznámka v päte").optional(),
+  // A strip above the header on every page, shown only between from and to (activeAnnouncement).
+  announcement: z.object({
+    text: text("Text oznamu", 160),
+    link: link("Odkaz").optional(),
+    from: z.iso.date().meta({ title: "Zobraziť od" }),
+    to: z.iso.date().meta({ title: "Zobraziť do (vrátane)" }),
+    tone: z.enum(["normal", "important"]).default("normal").meta({ title: "Tón" }),
+  }).meta({ title: "Oznam" }).optional(),
 })
 
 export const seoSchema = z.object({
